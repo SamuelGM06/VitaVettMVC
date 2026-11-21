@@ -1,0 +1,21 @@
+# Artefactos de build y control de versiones
+**/bin
+**/obj
+.git
+.gitignore
+.vs
+.vscode
+.idea
+docs
+
+# Secretos: nunca dentro de la imagen
+appsettings.Development.json
+**/*.user
+**/secrets.json
+.env
+.env.*
+
+# Dockerfile y pipeline no hacen falta dentro de la imagen
+Dockerfile
+.dockerignore
+.github
