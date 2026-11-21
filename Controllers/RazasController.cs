@@ -13,7 +13,7 @@ public class RazasController(AppDbContext db) : Controller
     private const string DuplicadaMessage = "Ya existe una raza con ese nombre en la especie seleccionada.";
     private const string EnUsoMessage = "No se puede eliminar esta raza porque tiene mascotas asociadas.";
     private const string CambioEspecieMessage =
-        "No se puede cambiar la especie de una raza que ya tiene mascotas asoci
+        "No se puede cambiar la especie de una raza que ya tiene mascotas asociadas.";
 
     public async Task<IActionResult> Index()
     {
