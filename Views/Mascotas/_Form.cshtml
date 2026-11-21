@@ -1,0 +1,90 @@
+@using VitaVettMVC.Models.ViewModels
+@model MascotaFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="Nombre" class="form-label"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="DuenoId" class="form-label"></label>
+        <select asp-for="DuenoId" class="form-select"
+                asp-items="@(new SelectList(Model.Duenos.Select(d => new { d.Id, Texto = $"{d.Nombre} {d.Apellidos} ({d.Cedula})" }), "Id", "Texto", Model.DuenoId))">
+            <option value="">Seleccione el dueño</option>
+        </select>
+        <span asp-validation-for="DuenoId" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="EspecieId" class="form-label"></label>
+        <select asp-for="EspecieId" class="form-select"
+                asp-items="@(new SelectList(Model.Especies, "Id", "Nombre", Model.EspecieId))">
+            <option value="">Seleccione una especie</option>
+        </select>
+        <span asp-validation-for="EspecieId" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="RazaId" class="form-label"></label>
+        <select asp-for="RazaId" class="form-select">
+            <option value="">Sin raza / mestizo</option>
+            @foreach (var raza in Model.Razas)
+            {
+                <option value="@raza.Id" data-especie="@raza.EspecieId" selected="@(raza.Id == Model.RazaId)">@raza.Nombre</option>
+            }
+        </select>
+        <span asp-validation-for="RazaId" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label asp-for="FechaNacimiento" class="form-label"></label>
+        <input asp-for="FechaNacimiento" type="date" class="form-control" />
+        <span asp-validation-for="FechaNacimiento" class="text-danger"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label asp-for="Sexo" class="form-label"></label>
+        <select asp-for="Sexo" class="form-select">
+            <option value="">Sin especificar</option>
+            <option value="Macho">Macho</option>
+            <option value="Hembra">Hembra</option>
+        </select>
+        <span asp-validation-for="Sexo" class="text-danger"></span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Foto" class="form-label"></label>
+    @if (ViewBag.TieneFoto == true && Model.Id > 0)
+    {
+        <div class="mb-2">
+            <img src="@Url.Action("Foto", "Mascotas", new { id = Model.Id })" alt="Foto actual" style="max-height:120px" class="rounded" />
+            <div class="form-text">Suba una nueva foto solo si desea reemplazar la actual.</div>
+        </div>
+    }
+    <input asp-for="Foto" type="file" accept="image/jpeg,image/png" class="form-control" />
+    <span asp-validation-for="Foto" class="text-danger"></span>
+</div>
+
+<script>
+    // Muestra solo las razas de la especie elegida.
+    (() => {
+        const especie = document.getElementById("EspecieId");
+        const raza = document.getElementById("RazaId");
+        const filtrar = () => {
+            for (const op of raza.options) {
+                if (!op.value) continue;
+                const visible = op.dataset.especie === especie.value;
+                op.hidden = !visible;
+                if (!visible && op.selected) raza.value = "";
+            }
+        };
+        especie.addEventListener("change", filtrar);
+        filtrar();
+    })();
+</script>
