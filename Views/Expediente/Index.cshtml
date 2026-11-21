@@ -18,9 +18,12 @@
     <div class="flex-grow-1">
         <h2 class="mb-1">@Model.Nombre</h2>
         <div class="text-muted">
-            @Model.Especie.Nombre@(Model.Raza is null ? "" : $" / {Model.Raza.Nombre}")
-            @if (Model.Sexo is not null) { <text>· @Model.Sexo</text> }
-            @if (Model.FechaNacimiento is not null) { <text>· Nació el @Model.FechaNacimiento.Value.ToString("dd/MM/yyyy")</text> }
+            @string.Join(" · ", new[]
+            {
+                Model.Especie.Nombre + (Model.Raza is null ? "" : $" / {Model.Raza.Nombre}"),
+                Model.Sexo,
+                Model.FechaNacimiento is null ? null : $"Nació el {Model.FechaNacimiento:dd/MM/yyyy}"
+            }.Where(s => !string.IsNullOrEmpty(s)))
         </div>
         <div>Dueño: @Model.Dueno.Nombre @Model.Dueno.Apellidos (@Model.Dueno.Cedula) · @Model.Dueno.Email</div>
         <div class="small">Última atención: @(ultimaAtencion?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "sin registros")</div>
