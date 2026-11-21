@@ -1,0 +1,19 @@
+@using VitaVettMVC.Models.ViewModels
+@model UsuarioFormViewModel
+@{
+    ViewData["Title"] = "Nuevo usuario";
+    ViewBag.EsCreacion = true;
+}
+
+<h2 class="mb-3">Nuevo usuario</h2>
+<p class="text-muted">Los veterinarios se crean desde el módulo de Veterinarios.</p>
+
+<form asp-action="Create" method="post">
+    <partial name="_Form" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="ms-2" asp-action="Index">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

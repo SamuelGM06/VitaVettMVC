@@ -1,0 +1,22 @@
+@model VitaVettMVC.Models.Usuario
+@{
+    ViewData["Title"] = "Eliminar usuario";
+    string? motivo = ViewBag.Motivo;
+}
+
+<h2 class="mb-3">Eliminar usuario</h2>
+
+<p>¿Desea eliminar a <strong>@Model.Nombre @Model.Apellidos</strong> (@Model.Rol, cédula @Model.Cedula)?</p>
+
+@if (motivo is not null)
+{
+    <div class="alert alert-warning">@motivo</div>
+    <a asp-action="Index">Volver</a>
+}
+else
+{
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a class="ms-2" asp-action="Index">Cancelar</a>
+    </form>
+}
