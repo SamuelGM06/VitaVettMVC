@@ -51,23 +51,76 @@ public class AuthController(AppDbContext db, IPasswordHasher<Usuario> hasher) : 
             return View(model);
         }
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-            new(ClaimTypes.Name, $"{usuario.Nombre} {usuario.Apellidos}"),
-            new(ClaimTypes.Role, usuario.Rol.ToString())
-        };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            new ClaimsPrincipal(identity));
+        await SignInAsync(usuario);
 
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
             return LocalRedirect(returnUrl);
         }
 
+        return RedirectToAction("Index", "Home");
+    }
+
+    // Registro público: solo crea dueños. Administradores y veterinarios crean los demás perfiles.
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View(new RegistroDuenoViewModel());
+    }
+
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegistroDuenoViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var cedula = model.Cedula.Trim();
+        var email = model.Email.Trim();
+
+        if (await db.Usuarios.AnyAsync(u => u.Cedula == cedula))
+        {
+            ModelState.AddModelError(nameof(model.Cedula), "Ya existe una cuenta con esta cédula.");
+        }
+
+        if (await db.Usuarios.AnyAsync(u => u.Email == email))
+        {
+            ModelState.AddModelError(nameof(model.Email), "Ya existe una cuenta con este correo.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var usuario = new Usuario
+        {
+            Cedula = cedula,
+            Nombre = model.Nombre.Trim(),
+            Apellidos = model.Apellidos.Trim(),
+            Email = email,
+            Rol = RolUsuario.Dueno,
+            Bloqueado = false
+        };
+        usuario.PasswordHash = hasher.HashPassword(usuario, model.Password);
+
+        db.Usuarios.Add(usuario);
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Si dos registros llegan a la vez, el índice único de la BD es la última barrera.
+            ModelState.AddModelError(string.Empty, "No se pudo crear la cuenta: la cédula o el correo ya están en uso.");
+            return View(model);
+        }
+
+        await SignInAsync(usuario);
         return RedirectToAction("Index", "Home");
     }
 
@@ -84,5 +137,20 @@ public class AuthController(AppDbContext db, IPasswordHasher<Usuario> hasher) : 
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    private async Task SignInAsync(Usuario usuario)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Name, $"{usuario.Nombre} {usuario.Apellidos}"),
+            new(ClaimTypes.Role, usuario.Rol.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity));
     }
 }
