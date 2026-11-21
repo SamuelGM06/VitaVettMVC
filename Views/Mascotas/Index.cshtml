@@ -46,6 +46,7 @@
                 <td>@m.Especie.Nombre @(m.Raza is null ? "" : $"/ {m.Raza.Nombre}")</td>
                 <td>@m.Dueno.Nombre @m.Dueno.Apellidos <span class="text-muted small">(@m.Dueno.Cedula)</span></td>
                 <td class="text-end">
+                    <a class="btn btn-sm btn-primary" asp-controller="Expediente" asp-action="Index" asp-route-id="@m.Id">Expediente</a>
                     <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@m.Id">Editar</a>
                     <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@m.Id">Eliminar</a>
                 </td>
