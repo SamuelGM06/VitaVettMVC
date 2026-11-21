@@ -1,0 +1,24 @@
+@model VitaVettMVC.Models.Veterinario
+@{
+    ViewData["Title"] = "Eliminar veterinario";
+    bool enUso = ViewBag.EnUso;
+}
+
+<h2 class="mb-3">Eliminar veterinario</h2>
+
+<p>¿Desea eliminar a <strong>@Model.Usuario.Nombre @Model.Usuario.Apellidos</strong> (colegiado @Model.NumeroColegiado)?</p>
+
+@if (enUso)
+{
+    <div class="alert alert-warning">
+        No se puede eliminar: tiene registros clínicos o mascotas asociados. Puede bloquear la cuenta desde el listado.
+    </div>
+    <a asp-action="Index">Volver</a>
+}
+else
+{
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a class="ms-2" asp-action="Index">Cancelar</a>
+    </form>
+}

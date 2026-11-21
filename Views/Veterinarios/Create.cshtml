@@ -1,0 +1,18 @@
+@using VitaVettMVC.Models.ViewModels
+@model VeterinarioFormViewModel
+@{
+    ViewData["Title"] = "Nuevo veterinario";
+    ViewBag.EsCreacion = true;
+}
+
+<h2 class="mb-3">Nuevo veterinario</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <partial name="_Form" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="ms-2" asp-action="Index">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
