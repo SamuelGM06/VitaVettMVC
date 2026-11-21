@@ -1,0 +1,19 @@
+@using VitaVettMVC.Models.ViewModels
+@model RazaFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="mb-3">
+    <label asp-for="EspecieId" class="form-label"></label>
+    <select asp-for="EspecieId" class="form-select"
+            asp-items="@(new SelectList(Model.Especies, "Id", "Nombre", Model.EspecieId))">
+        <option value="">Seleccione una especie</option>
+    </select>
+    <span asp-validation-for="EspecieId" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Nombre" class="form-label"></label>
+    <input asp-for="Nombre" class="form-control" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>

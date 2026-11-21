@@ -1,0 +1,17 @@
+@using VitaVettMVC.Models.ViewModels
+@model RazaFormViewModel
+@{
+    ViewData["Title"] = "Editar raza";
+}
+
+<h2 class="mb-3">Editar raza</h2>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+    <partial name="_Form" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a class="ms-2" asp-action="Index">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

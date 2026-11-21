@@ -1,0 +1,26 @@
+@model VitaVettMVC.Models.Especie
+@{
+    ViewData["Title"] = "Eliminar especie";
+    int razas = ViewBag.RazasCount;
+    int mascotas = ViewBag.MascotasCount;
+    bool enUso = razas > 0 || mascotas > 0;
+}
+
+<h2 class="mb-3">Eliminar especie</h2>
+
+<p>¿Desea eliminar la especie <strong>@Model.Nombre</strong>?</p>
+
+@if (enUso)
+{
+    <div class="alert alert-warning">
+        No se puede eliminar: tiene @razas raza(s) y @mascotas mascota(s) asociada(s).
+    </div>
+    <a asp-action="Index">Volver</a>
+}
+else
+{
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a class="ms-2" asp-action="Index">Cancelar</a>
+    </form>
+}

@@ -1,0 +1,17 @@
+@using VitaVettMVC.Models.ViewModels
+@model EspecieFormViewModel
+@{
+    ViewData["Title"] = "Nueva especie";
+}
+
+<h2 class="mb-3">Nueva especie</h2>
+
+<form asp-action="Create" method="post">
+    <partial name="_Form" model="Model" />
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="ms-2" asp-action="Index">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

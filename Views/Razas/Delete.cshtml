@@ -1,0 +1,24 @@
+@model VitaVettMVC.Models.Raza
+@{
+    ViewData["Title"] = "Eliminar raza";
+    int mascotas = ViewBag.MascotasCount;
+}
+
+<h2 class="mb-3">Eliminar raza</h2>
+
+<p>¿Desea eliminar la raza <strong>@Model.Nombre</strong> (@Model.Especie.Nombre)?</p>
+
+@if (mascotas > 0)
+{
+    <div class="alert alert-warning">
+        No se puede eliminar: tiene @mascotas mascota(s) asociada(s).
+    </div>
+    <a asp-action="Index">Volver</a>
+}
+else
+{
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a class="ms-2" asp-action="Index">Cancelar</a>
+    </form>
+}
