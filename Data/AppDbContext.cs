@@ -20,7 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         base.OnModelCreating(modelBuilder);
 
-        // Enums guardados como texto para que el esquema sea legible.
+        // Enums guardados como texto para leeerlo mejor
         modelBuilder.Entity<Usuario>()
             .Property(u => u.Rol)
             .HasConversion<string>()
