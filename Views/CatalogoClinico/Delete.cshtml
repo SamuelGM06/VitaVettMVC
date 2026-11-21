@@ -1,0 +1,24 @@
+@model VitaVettMVC.Models.ItemClinico
+@{
+    ViewData["Title"] = "Eliminar ítem clínico";
+    bool enUso = ViewBag.EnUso;
+}
+
+<h2 class="mb-3">Eliminar ítem del catálogo</h2>
+
+<p>¿Desea eliminar <strong>@Model.Nombre</strong> (@Model.Tipo)?</p>
+
+@if (enUso)
+{
+    <div class="alert alert-warning">
+        No se puede eliminar: este ítem está en uso en expedientes. Puede desactivarlo desde el listado.
+    </div>
+    <a asp-action="Index">Volver</a>
+}
+else
+{
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a class="ms-2" asp-action="Index">Cancelar</a>
+    </form>
+}

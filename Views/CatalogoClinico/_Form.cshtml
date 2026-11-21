@@ -1,0 +1,31 @@
+@using VitaVettMVC.Models
+@using VitaVettMVC.Models.ViewModels
+@model ItemClinicoFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+<div class="mb-3">
+    <label asp-for="Nombre" class="form-label"></label>
+    <input asp-for="Nombre" class="form-control" />
+    <span asp-validation-for="Nombre" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Tipo" class="form-label"></label>
+    <select asp-for="Tipo" class="form-select"
+            asp-items="@(Html.GetEnumSelectList<TipoItemClinico>())">
+        <option value="">Seleccione un tipo</option>
+    </select>
+    <span asp-validation-for="Tipo" class="text-danger"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Descripcion" class="form-label">Descripción (opcional)</label>
+    <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="Descripcion" class="text-danger"></span>
+</div>
+
+<div class="form-check mb-3">
+    <input asp-for="Activo" class="form-check-input" />
+    <label asp-for="Activo" class="form-check-label">Activo (disponible para asignar)</label>
+</div>
