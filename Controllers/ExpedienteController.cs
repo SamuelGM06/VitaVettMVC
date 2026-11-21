@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,22 @@ namespace VitaVettMVC.Controllers;
 [Authorize(Roles = "Administrador,Veterinario")]
 public class ExpedienteController(AppDbContext db) : Controller
 {
+    private const long MaxExamenBytes = 5 * 1024 * 1024;
+    private static readonly string[] TiposExamen = ["application/pdf", "image/jpeg", "image/png"];
+
+    // Solo el formato que produce el editor de notas; todo lo demás se elimina.
+    private static readonly HtmlSanitizer Sanitizador = CrearSanitizador();
+
+    private static HtmlSanitizer CrearSanitizador()
+    {
+        var s = new HtmlSanitizer();
+        s.AllowedTags.Clear();
+        s.AllowedTags.UnionWith(["p", "br", "div", "b", "strong", "i", "em", "u", "ul", "ol", "li"]);
+        s.AllowedAttributes.Clear();
+        s.AllowedCssProperties.Clear();
+        return s;
+    }
+
     public async Task<IActionResult> Index(int id)
     {
         var mascota = await db.Mascotas
@@ -26,6 +43,7 @@ public class ExpedienteController(AppDbContext db) : Controller
             .Include(m => m.Tratamientos).ThenInclude(t => t.ItemClinico)
             .Include(m => m.Tratamientos).ThenInclude(t => t.Veterinario).ThenInclude(v => v.Usuario)
             .Include(m => m.Tratamientos).ThenInclude(t => t.VeterinarioSuspension!).ThenInclude(v => v.Usuario)
+            .Include(m => m.Notas).ThenInclude(n => n.Veterinario).ThenInclude(v => v.Usuario)
             .AsSplitQuery()
             .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -33,6 +51,21 @@ public class ExpedienteController(AppDbContext db) : Controller
         {
             return NotFound();
         }
+
+        // Los exámenes se listan sin su contenido binario (se descarga aparte).
+        ViewBag.Examenes = await db.Examenes.AsNoTracking()
+            .Where(e => e.MascotaId == id)
+            .OrderByDescending(e => e.FechaSubida)
+            .Select(e => new ExamenArchivo
+            {
+                Id = e.Id,
+                Descripcion = e.Descripcion,
+                NombreArchivo = e.NombreArchivo,
+                ContentType = e.ContentType,
+                FechaSubida = e.FechaSubida,
+                Veterinario = new Veterinario { Usuario = e.Veterinario.Usuario }
+            })
+            .ToListAsync();
 
         // Solo ítems activos del catálogo se pueden asignar.
         var items = await db.ItemsClinicos.AsNoTracking()
@@ -144,6 +177,94 @@ public class ExpedienteController(AppDbContext db) : Controller
         }
 
         return RedirectToAction(nameof(Index), new { id = asignacion.MascotaId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Veterinario")]
+    [RequestSizeLimit(MaxExamenBytes + 1024 * 1024)]
+    public async Task<IActionResult> SubirExamen(int id, string? descripcion, IFormFile? archivo)
+    {
+        var veterinarioId = await VeterinarioActualIdAsync();
+        if (veterinarioId is null || !await db.Mascotas.AnyAsync(m => m.Id == id))
+        {
+            return NotFound();
+        }
+
+        descripcion = descripcion?.Trim();
+        var error =
+            string.IsNullOrEmpty(descripcion) ? "La descripción del examen es obligatoria."
+            : descripcion.Length > 300 ? "La descripción no puede superar 300 caracteres."
+            : archivo is null || archivo.Length == 0 ? "Seleccione un archivo."
+            : archivo.Length > MaxExamenBytes ? "El archivo no puede superar 5 MB."
+            : !TiposExamen.Contains(archivo.ContentType) ? "El archivo debe ser PDF, JPG o PNG."
+            : null;
+
+        if (error is not null)
+        {
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        using var stream = new MemoryStream();
+        await archivo!.CopyToAsync(stream);
+        db.Examenes.Add(new ExamenArchivo
+        {
+            MascotaId = id,
+            VeterinarioId = veterinarioId.Value,
+            Descripcion = descripcion!,
+            Contenido = stream.ToArray(),
+            ContentType = archivo.ContentType,
+            NombreArchivo = Path.GetFileName(archivo.FileName)
+        });
+        await db.SaveChangesAsync();
+        TempData["Exito"] = "Examen subido.";
+        return RedirectToAction(nameof(Index), new { id });
+    }
+
+    // El archivo vive en la BD (no hay disco persistente en Render).
+    [HttpGet]
+    public async Task<IActionResult> Examen(int examenId)
+    {
+        var examen = await db.Examenes.AsNoTracking().FirstOrDefaultAsync(e => e.Id == examenId);
+        if (examen is null)
+        {
+            return NotFound();
+        }
+
+        Response.Headers.XContentTypeOptions = "nosniff";
+        return File(examen.Contenido, examen.ContentType);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Veterinario")]
+    public async Task<IActionResult> AgregarNota(int id, string? contenido)
+    {
+        var veterinarioId = await VeterinarioActualIdAsync();
+        if (veterinarioId is null || !await db.Mascotas.AnyAsync(m => m.Id == id))
+        {
+            return NotFound();
+        }
+
+        // Se sanitiza el HTML del editor para que no pueda inyectar scripts.
+        var limpio = Sanitizador.Sanitize(contenido ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(System.Text.RegularExpressions.Regex.Replace(limpio, "<[^>]*>|&nbsp;", "")))
+        {
+            TempData["Error"] = "La nota no puede estar vacía.";
+            return RedirectToAction(nameof(Index), new { id });
+        }
+
+        // Las notas son inmutables: no existen acciones para editarlas ni borrarlas.
+        db.NotasHistorial.Add(new NotaHistorial
+        {
+            MascotaId = id,
+            VeterinarioId = veterinarioId.Value,
+            Contenido = limpio
+        });
+        await db.SaveChangesAsync();
+        TempData["Exito"] = "Nota agregada al historial.";
+        return RedirectToAction(nameof(Index), new { id });
     }
 
     /// <summary>Perfil de veterinario del usuario actual (null si es administrador o no tiene perfil).</summary>

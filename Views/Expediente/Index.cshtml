@@ -5,6 +5,9 @@
     var hoy = DateOnly.FromDateTime(DateTime.Today);
     var vacunas = (List<ItemClinico>)ViewBag.Vacunas;
     var tratamientos = (List<ItemClinico>)ViewBag.Tratamientos;
+    var examenes = (List<ExamenArchivo>)ViewBag.Examenes;
+    // La última atención se calcula desde el historial (no es una columna).
+    var ultimaAtencion = Model.Notas.Any() ? Model.Notas.Max(n => n.FechaRegistro) : (DateTime?)null;
 }
 
 <div class="d-flex align-items-center gap-3 mb-3">
@@ -20,6 +23,7 @@
             @if (Model.FechaNacimiento is not null) { <text>· Nació el @Model.FechaNacimiento.Value.ToString("dd/MM/yyyy")</text> }
         </div>
         <div>Dueño: @Model.Dueno.Nombre @Model.Dueno.Apellidos (@Model.Dueno.Cedula) · @Model.Dueno.Email</div>
+        <div class="small">Última atención: @(ultimaAtencion?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "sin registros")</div>
     </div>
     <a class="btn btn-outline-secondary" asp-controller="Mascotas" asp-action="Edit" asp-route-id="@Model.Id">Editar datos</a>
 </div>
@@ -153,4 +157,91 @@
     </form>
 }
 
+<h4 class="mt-4">Exámenes</h4>
+<table class="table table-sm align-middle">
+    <thead>
+        <tr><th>Descripción</th><th>Archivo</th><th>Fecha</th><th>Subido por</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var e in examenes)
+        {
+            <tr>
+                <td>@e.Descripcion</td>
+                <td><a asp-action="Examen" asp-route-examenId="@e.Id" target="_blank">@e.NombreArchivo</a></td>
+                <td>@e.FechaSubida.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@e.Veterinario.Usuario.Nombre @e.Veterinario.Usuario.Apellidos</td>
+            </tr>
+        }
+        @if (!examenes.Any())
+        {
+            <tr><td colspan="4" class="text-muted">Sin exámenes.</td></tr>
+        }
+    </tbody>
+</table>
+@if (puedeRegistrar)
+{
+    <form asp-action="SubirExamen" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end mb-4">
+        <div class="col-md-5">
+            <label class="form-label" for="descripcion">Descripción</label>
+            <input id="descripcion" name="descripcion" class="form-control" required maxlength="300" placeholder="Ej.: Hemograma completo" />
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="archivo">Archivo (PDF, JPG o PNG, máx. 5 MB)</label>
+            <input id="archivo" name="archivo" type="file" class="form-control" required accept="application/pdf,image/jpeg,image/png" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Subir</button>
+        </div>
+    </form>
+}
+
+<h4 class="mt-4">Historial clínico</h4>
+<p class="text-muted small">Las notas son permanentes: no se pueden editar ni eliminar.</p>
+@if (puedeRegistrar)
+{
+    <form asp-action="AgregarNota" asp-route-id="@Model.Id" method="post" class="mb-4" id="formNota">
+        <div class="btn-group btn-group-sm mb-1" role="toolbar" aria-label="Formato">
+            <button type="button" class="btn btn-outline-secondary" data-cmd="bold" title="Negrita"><b>N</b></button>
+            <button type="button" class="btn btn-outline-secondary" data-cmd="italic" title="Cursiva"><i>K</i></button>
+            <button type="button" class="btn btn-outline-secondary" data-cmd="underline" title="Subrayado"><u>S</u></button>
+            <button type="button" class="btn btn-outline-secondary" data-cmd="insertUnorderedList" title="Lista">• Lista</button>
+            <button type="button" class="btn btn-outline-secondary" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>
+        </div>
+        <div id="editorNota" class="form-control" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Nueva nota" style="min-height:120px"></div>
+        <input type="hidden" name="contenido" id="contenidoNota" />
+        <button type="submit" class="btn btn-primary mt-2">Agregar nota</button>
+    </form>
+}
+@foreach (var n in Model.Notas.OrderByDescending(n => n.FechaRegistro))
+{
+    <div class="card mb-2">
+        <div class="card-header small">
+            @n.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @n.Veterinario.Usuario.Nombre @n.Veterinario.Usuario.Apellidos
+        </div>
+        @* El contenido se sanitizó al guardarse. *@
+        <div class="card-body">@Html.Raw(n.Contenido)</div>
+    </div>
+}
+@if (!Model.Notas.Any())
+{
+    <p class="text-muted">Sin notas en el historial.</p>
+}
+
 <a asp-controller="Mascotas" asp-action="Index">Volver a mascotas</a>
+
+@section Scripts {
+    <script>
+        // Editor de texto enriquecido mínimo: el HTML se envía y el servidor lo sanitiza.
+        (() => {
+            const form = document.getElementById("formNota");
+            if (!form) return;
+            const editor = document.getElementById("editorNota");
+            form.querySelectorAll("[data-cmd]").forEach(b =>
+                b.addEventListener("click", () => { document.execCommand(b.dataset.cmd); editor.focus(); }));
+            form.addEventListener("submit", e => {
+                if (!editor.innerText.trim()) { e.preventDefault(); alert("La nota no puede estar vacía."); return; }
+                document.getElementById("contenidoNota").value = editor.innerHTML;
+            });
+        })();
+    </script>
+}
