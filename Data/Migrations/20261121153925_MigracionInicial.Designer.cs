@@ -12,8 +12,8 @@ using VitaVettMVC.Data;
 namespace VitaVettMVC.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261121153308_InitialSchema")]
-    partial class InitialSchema
+    [Migration("20261121153925_MigracionInicial")]
+    partial class MigracionInicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
