@@ -60,11 +60,14 @@ body {
   color: #ffffff;
 }
 
-.vv-brand img {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.5rem;
-  flex-shrink: 0;
+/* El logo original tiene fondo claro: se muestra sobre una tarjeta blanca para que se vea en la barra oscura. */
+.vv-logo {
+  height: 3rem;
+  width: auto;
+  padding: 0.25rem 0.6rem;
+  background-color: #ffffff;
+  border-radius: 0.6rem;
+  display: block;
 }
 
 .vv-brand .vv-vita {
