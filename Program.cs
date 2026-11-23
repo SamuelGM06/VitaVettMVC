@@ -58,9 +58,16 @@ builder.Services.AddAuthorization();
 // Autenticación JWT para la aplicación móvil.
 // La autenticación MVC por cookies se mantiene como predeterminada.
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException(
-        "Falta configurar Jwt:Key en los secretos del proyecto.");
+// Sin Jwt:Key (por ejemplo, Render sin la variable Jwt__Key) se usa una clave
+// aleatoria para que la web no se caiga; la app móvil funciona, pero los dueños
+// deben iniciar sesión de nuevo cada vez que el servidor se reinicia.
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    jwtKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
+    builder.Configuration["Jwt:Key"] = jwtKey; // MovilAuthController firma con esta misma clave
+    Console.WriteLine("Aviso: falta Jwt:Key; se usa una clave temporal. Configura Jwt__Key en el servidor.");
+}
 
 builder.Services.AddAuthentication()
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
