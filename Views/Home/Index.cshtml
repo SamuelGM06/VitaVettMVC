@@ -1,8 +1,65 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Inicio";
+    var nombre = User.FindFirstValue(ClaimTypes.Name);
+    var rol = User.FindFirstValue(ClaimTypes.Role);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="vv-card p-4 p-md-5 mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div>
+            <h1 class="display-6 mb-2">Bienvenido, @nombre</h1>
+            <p class="text-muted mb-3">Expediente electrónico veterinario de VitaVett.</p>
+            <span class="vv-pill vv-pill-outline">@rol</span>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            @if (rol == "Administrador")
+            {
+                <a class="btn btn-primary" asp-controller="Usuarios" asp-action="Index">Gestionar usuarios</a>
+                <a class="btn btn-outline-primary" asp-controller="Veterinarios" asp-action="Index">Veterinarios</a>
+            }
+            @if (rol == "Administrador" || rol == "Veterinario")
+            {
+                <a class="btn btn-accent" asp-controller="Mascotas" asp-action="Index">Ver mascotas</a>
+            }
+        </div>
+    </div>
+</section>
+
+@if (rol == "Administrador")
+{
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-3">
+            <a class="text-decoration-none" asp-controller="Especies" asp-action="Index">
+                <div class="vv-card p-3 h-100">
+                    <h5 class="mb-1">Especies</h5>
+                    <p class="text-muted small mb-0">Catálogo de especies y razas.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a class="text-decoration-none" asp-controller="CatalogoClinico" asp-action="Index">
+                <div class="vv-card p-3 h-100">
+                    <h5 class="mb-1">Catálogo clínico</h5>
+                    <p class="text-muted small mb-0">Medicamentos, tratamientos y vacunas.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a class="text-decoration-none" asp-controller="Veterinarios" asp-action="Index">
+                <div class="vv-card p-3 h-100">
+                    <h5 class="mb-1">Veterinarios</h5>
+                    <p class="text-muted small mb-0">Perfiles, colegiados y fotografías.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a class="text-decoration-none" asp-controller="Usuarios" asp-action="Index">
+                <div class="vv-card p-3 h-100">
+                    <h5 class="mb-1">Usuarios</h5>
+                    <p class="text-muted small mb-0">Administradores y dueños.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+}

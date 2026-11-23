@@ -61,8 +61,10 @@ body {
 }
 
 .vv-brand img {
-  height: 2rem;
-  width: auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
 }
 
 .vv-brand .vv-vita {

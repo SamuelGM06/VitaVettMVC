@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="VitaVett">
+  <!-- Fondo en mosaico blanco para que el ícono se vea sobre la barra oscura -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="#ffffff"/>
   <!-- Cruz médica redondeada: brazo vertical teal y brazo horizontal teal oscuro -->
-  <rect x="34" y="4" width="32" height="92" rx="12" fill="#0D9488"/>
-  <rect x="4" y="34" width="92" height="32" rx="12" fill="#115E59"/>
-  <!-- Siluetas simplificadas de perro y gato en blanco -->
-  <path d="M28 40 q6 -4 10 2 q2 6 -2 10 q-4 4 -9 0 q-4 -4 1 -12 z" fill="#F8FAFC" opacity="0.9"/>
-  <path d="M66 42 l6 -8 l4 6 l6 -4 l0 10 q-2 8 -10 8 q-6 -2 -6 -12 z" fill="#F8FAFC" opacity="0.9"/>
-  <path d="M46 62 q4 -8 8 0 q3 6 0 16 q-4 6 -8 0 q-3 -8 0 -16 z" fill="#F8FAFC" opacity="0.9"/>
+  <rect x="34" y="14" width="32" height="72" rx="12" fill="#0D9488"/>
+  <rect x="14" y="34" width="72" height="32" rx="12" fill="#115E59"/>
+  <!-- Siluetas simplificadas de perro, gato y conejo en blanco -->
+  <path d="M26 40 q6 -4 10 2 q2 6 -2 10 q-4 4 -9 0 q-4 -4 1 -12 z" fill="#F8FAFC"/>
+  <path d="M66 42 l6 -8 l4 6 l6 -4 l0 10 q-2 8 -10 8 q-6 -2 -6 -12 z" fill="#F8FAFC"/>
+  <path d="M46 60 q4 -8 8 0 q3 6 0 16 q-4 6 -8 0 q-3 -8 0 -16 z" fill="#F8FAFC"/>
 </svg>
