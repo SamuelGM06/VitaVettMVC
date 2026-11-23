@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VitaVettMVC.Data;
 using VitaVettMVC.Models;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +54,65 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+// Autenticación JWT para la aplicación móvil.
+// La autenticación MVC por cookies se mantiene como predeterminada.
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "Falta configurar Jwt:Key en los secretos del proyecto.");
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "VitaVettMVC",
+
+            ValidateAudience = true,
+            ValidAudience = "VitaVettMovil",
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey)),
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+
+        // Verifica que el dueño no haya sido bloqueado
+        // después de recibir su token.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var idTexto = context.Principal?
+                    .FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!int.TryParse(idTexto, out var usuarioId))
+                {
+                    context.Fail("Token inválido.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices
+                    .GetRequiredService<AppDbContext>();
+
+                var usuario = await db.Usuarios
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == usuarioId);
+
+                if (usuario is null ||
+                    usuario.Bloqueado ||
+                    usuario.Rol != RolUsuario.Dueno)
+                {
+                    context.Fail("Usuario sin acceso.");
+                }
+            }
+        };
+    });
+
 
 // Render termina TLS en su proxy: confiar en X-Forwarded-Proto evita un bucle de redirección HTTPS.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
