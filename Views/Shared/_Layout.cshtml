@@ -1,66 +1,71 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - VitaVettMVC</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - VitaVett</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/VitaVettMVC.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-dark vv-navbar mb-4">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">VitaVettMVC</a>
+                <a class="vv-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/img/vitavett-icon.svg" alt="" />
+                    <span><span class="vv-vita">Vita</span><span class="vv-vett">Vett</span></span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                        aria-expanded="false" aria-label="Alternar navegación">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 ms-sm-3">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>
                         @if (User.IsInRole("Administrador") || User.IsInRole("Veterinario"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Mascotas" asp-action="Index">Mascotas</a>
+                                <a class="nav-link" asp-controller="Mascotas" asp-action="Index">Mascotas</a>
                             </li>
                         }
                         @if (User.IsInRole("Administrador"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Especies" asp-action="Index">Especies</a>
+                                <a class="nav-link" asp-controller="Especies" asp-action="Index">Especies</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Razas" asp-action="Index">Razas</a>
+                                <a class="nav-link" asp-controller="Razas" asp-action="Index">Razas</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="CatalogoClinico" asp-action="Index">Catálogo clínico</a>
+                                <a class="nav-link" asp-controller="CatalogoClinico" asp-action="Index">Catálogo clínico</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Veterinarios" asp-action="Index">Veterinarios</a>
+                                <a class="nav-link" asp-controller="Veterinarios" asp-action="Index">Veterinarios</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                                <a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
                             </li>
                         }
                     </ul>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-flex align-items-center gap-2">
-                            <span class="text-muted small">@User.Identity.Name (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)</span>
-                            <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                            <span class="vv-user">
+                                @User.Identity.Name
+                                <span class="vv-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                            </span>
+                            <button type="submit" class="btn btn-sm btn-logout">Cerrar sesión</button>
                         </form>
                     }
                     else
                     {
-                        <a class="btn btn-outline-primary btn-sm" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
+                        <a class="btn btn-sm btn-accent" asp-controller="Auth" asp-action="Login">Iniciar sesión</a>
                     }
                 </div>
             </div>
@@ -72,9 +77,10 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - VitaVettMVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="vv-footer py-3 mt-4">
+        <div class="container d-flex justify-content-between flex-wrap gap-2">
+            <span>&copy; 2026 VitaVett</span>
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
