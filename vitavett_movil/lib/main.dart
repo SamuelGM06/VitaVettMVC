@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 // Ejecutar con --dart-define=API_BASE_URL=https://TU-SERVIDOR-PUBLICO
 const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://10.0.2.2:5039', // Emulador Android + backend local
+  defaultValue: 'https://vitavettmvc.onrender.com', 
 );
 const FlutterSecureStorage almacenamiento = FlutterSecureStorage();
 
