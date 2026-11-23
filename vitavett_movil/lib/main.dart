@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vitavett_movil/config/tema.dart';
-import 'package:vitavett_movil/pantallas/login.dart';
-import 'package:vitavett_movil/pantallas/mascotas.dart';
+import 'package:vitavett_movil/screens/login.dart';
+import 'package:vitavett_movil/screens/mascotas.dart';
 import 'package:vitavett_movil/servicios/almacenamiento.dart';
 
 // Se re-exportan para que el código existente (por ejemplo, las pruebas) siga importando desde main.dart.

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vitavett_movil/config/tema.dart';
-import 'package:vitavett_movil/pantallas/expediente.dart';
+import 'package:vitavett_movil/screens/expediente.dart';
 import 'package:vitavett_movil/servicios/api_movil.dart';
 import 'package:vitavett_movil/widgets/avatar_mascota.dart';
 import 'package:vitavett_movil/widgets/comunes.dart';

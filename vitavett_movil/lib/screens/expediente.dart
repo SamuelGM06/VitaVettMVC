@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vitavett_movil/config/tema.dart';
-import 'package:vitavett_movil/pantallas/examenes.dart';
-import 'package:vitavett_movil/pantallas/vacunas.dart';
+import 'package:vitavett_movil/screens/examenes.dart';
+import 'package:vitavett_movil/screens/vacunas.dart';
 import 'package:vitavett_movil/widgets/avatar_mascota.dart';
 
 class PantallaExpediente extends StatelessWidget {
