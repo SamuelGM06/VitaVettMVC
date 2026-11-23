@@ -37,8 +37,7 @@ public class AuthController(AppDbContext db, IPasswordHasher<Usuario> hasher) : 
         var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Cedula == cedula);
 
         // Mismo mensaje si la cédula no existe o la contraseña es incorrecta (no revela cuentas existentes).
-        if (usuario is null ||
-            hasher.VerifyHashedPassword(usuario, usuario.PasswordHash, model.Password) == PasswordVerificationResult.Failed)
+        if (usuario is null || !ContrasenaValida(usuario, model.Password))
         {
             ModelState.AddModelError(string.Empty, "Cédula o contraseña incorrectas.");
             return View(model);
@@ -137,6 +136,19 @@ public class AuthController(AppDbContext db, IPasswordHasher<Usuario> hasher) : 
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    // Un hash mal formado (por ejemplo, el de relleno de los datos de demostración) no debe causar un error 500.
+    private bool ContrasenaValida(Usuario usuario, string password)
+    {
+        try
+        {
+            return hasher.VerifyHashedPassword(usuario, usuario.PasswordHash, password) != PasswordVerificationResult.Failed;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     private async Task SignInAsync(Usuario usuario)
