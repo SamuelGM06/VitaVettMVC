@@ -83,8 +83,13 @@ public class MovilMascotasController(AppDbContext db) : ControllerBase
                 nombre = v.ItemClinico.Nombre,
                 fechaAplicacion = v.FechaAplicacion,
                 proximaDosis = v.ProximaDosis,
+                // Solo la última dosis de cada vacuna puede estar vencida.
                 vencida = v.ProximaDosis != null &&
-                          v.ProximaDosis < hoy,
+                          v.ProximaDosis < hoy &&
+                          !db.AplicacionesVacuna.Any(b =>
+                              b.MascotaId == v.MascotaId &&
+                              b.ItemClinicoId == v.ItemClinicoId &&
+                              b.FechaAplicacion > v.FechaAplicacion),
                 veterinario =
                     v.Veterinario.Usuario.Nombre + " " +
                     v.Veterinario.Usuario.Apellidos
