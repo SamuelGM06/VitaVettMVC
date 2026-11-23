@@ -288,3 +288,336 @@ a:hover {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ===== Personalidad =====================================================
+   Ficha clínica, línea de tiempo del historial, avatares de mascota y
+   una sola animación de entrada por página.
+   ====================================================================== */
+
+:root {
+  --vv-mint: #E6F4F1;
+  --vv-danger: #BE123C;
+  --vv-danger-soft: #FFE4E6;
+}
+
+/* Única animación de carga: el contenido entra suave una vez. */
+@media (prefers-reduced-motion: no-preference) {
+  main[role="main"] {
+    animation: vv-entrada 0.35s ease-out both;
+  }
+
+  @keyframes vv-entrada {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+.vv-eyebrow {
+  color: var(--vv-muted);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ----- Login y registro ----- */
+.vv-auth {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--vv-border);
+  background-color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .vv-auth {
+    grid-template-columns: 5fr 6fr;
+  }
+}
+
+.vv-auth-brand {
+  background-color: var(--vv-primary-dark);
+  color: #ffffff;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vv-auth-brand h1 {
+  color: #ffffff;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.vv-auth-brand p {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 36ch;
+}
+
+.vv-auth-brand ul {
+  list-style: none;
+  padding: 0;
+  margin: auto 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.vv-auth-brand li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9375rem;
+}
+
+.vv-auth-brand li::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--vv-accent);
+  transform: translateY(-0.1rem);
+}
+
+.vv-auth-form {
+  padding: 2.5rem 2rem;
+}
+
+/* En celular el formulario va primero a la vista: el panel de marca se resume. */
+@media (max-width: 767.98px) {
+  .vv-auth-brand {
+    padding: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .vv-auth-brand h1 {
+    font-size: 1.25rem;
+  }
+
+  .vv-auth-brand ul,
+  .vv-auth-brand .vv-logo {
+    display: none;
+  }
+
+  .vv-auth-form {
+    padding: 1.5rem;
+  }
+}
+
+.vv-auth-form h2 {
+  margin-bottom: 0.25rem;
+}
+
+/* ----- Avatar de mascota (foto o inicial de la especie) ----- */
+.vv-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--vv-mint);
+  color: var(--vv-primary-dark);
+  font-weight: 700;
+  font-size: 1.125rem;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--vv-border);
+}
+
+.vv-avatar-lg {
+  width: 6rem;
+  height: 6rem;
+  font-size: 2.25rem;
+}
+
+/* ----- Ficha del expediente ----- */
+.vv-ficha {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-left: 6px solid var(--vv-primary);
+}
+
+@media (min-width: 768px) {
+  .vv-ficha {
+    grid-template-columns: auto 1fr auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .vv-ficha > .btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+.vv-ficha h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.vv-datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0.75rem 0 0;
+}
+
+.vv-datos div {
+  min-width: 7rem;
+}
+
+.vv-datos dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--vv-muted);
+}
+
+.vv-datos dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Secciones del expediente */
+.vv-seccion {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.vv-seccion > h2 {
+  font-size: 1.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.vv-seccion > h2 .vv-cuenta {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--vv-muted);
+}
+
+.vv-registrar {
+  background-color: var(--vv-mint);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.vv-vencida {
+  background-color: var(--vv-danger-soft);
+  color: var(--vv-danger);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.75rem;
+  margin-left: 0.35rem;
+}
+
+/* ----- Línea de tiempo del historial ----- */
+.vv-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  position: relative;
+}
+
+.vv-timeline::before {
+  content: "";
+  position: absolute;
+  left: 0.4375rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background-color: rgba(13, 148, 136, 0.3);
+}
+
+.vv-timeline > li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1.25rem;
+}
+
+.vv-timeline > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 3px solid var(--vv-primary);
+}
+
+.vv-timeline time {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--vv-primary-dark);
+}
+
+.vv-nota {
+  margin-top: 0.35rem;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  border: 1px solid var(--vv-border);
+  border-radius: 0.75rem;
+  max-width: 75ch;
+}
+
+.vv-nota > :last-child {
+  margin-bottom: 0;
+}
+
+/* ----- Inicio: indicadores ----- */
+.vv-indicador {
+  padding: 1.25rem;
+  height: 100%;
+}
+
+.vv-indicador strong {
+  display: block;
+  font-size: 2.25rem;
+  line-height: 1;
+  color: var(--vv-primary-dark);
+}
+
+.vv-indicador.vv-alerta strong {
+  color: var(--vv-danger);
+}
+
+.vv-indicador span {
+  color: var(--vv-muted);
+  font-size: 0.875rem;
+}
+
+/* Tarjetas que son enlaces: solo ellas reaccionan al pasar el cursor. */
+a > .vv-card {
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+a:hover > .vv-card,
+a:focus-visible > .vv-card {
+  border-color: var(--vv-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:hover > .vv-card {
+    transform: translateY(-2px);
+  }
+}
+
+.vv-vacio {
+  color: var(--vv-muted);
+  padding: 1rem 0;
+}
