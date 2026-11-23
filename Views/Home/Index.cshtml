@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Inicio";
     var nombre = User.FindFirstValue(ClaimTypes.Name);
@@ -25,6 +25,57 @@
         </div>
     </div>
 </section>
+
+@if (rol == "Dueno")
+{
+    <section class="vv-card vv-seccion">
+        <h2>El expediente de sus mascotas</h2>
+        <p class="mb-0">Las vacunas, tratamientos, exámenes y notas que registre su veterinario se consultan desde la aplicación móvil de VitaVett.</p>
+    </section>
+}
+
+@if (rol == "Administrador" || rol == "Veterinario")
+{
+    var vencidas = (List<AplicacionVacuna>)ViewBag.Vencidas;
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+            <div class="vv-card vv-indicador"><strong>@ViewBag.TotalMascotas</strong><span>Pacientes registrados</span></div>
+        </div>
+        <div class="col-sm-4">
+            <div class="vv-card vv-indicador @(ViewBag.TotalVencidas > 0 ? "vv-alerta" : "")"><strong>@ViewBag.TotalVencidas</strong><span>Vacunas vencidas</span></div>
+        </div>
+        <div class="col-sm-4">
+            <div class="vv-card vv-indicador"><strong>@ViewBag.TotalTratamientos</strong><span>Tratamientos vigentes</span></div>
+        </div>
+    </div>
+
+    <section class="vv-card vv-seccion">
+        <h2>Vacunas por renovar</h2>
+        @if (vencidas.Any())
+        {
+            <ul class="list-unstyled mb-0">
+                @foreach (var v in vencidas)
+                {
+                    <li class="d-flex justify-content-between align-items-center gap-2 py-2 border-bottom">
+                        <span>
+                            <a class="fw-semibold" asp-controller="Expediente" asp-action="Index" asp-route-id="@v.MascotaId">@v.Mascota.Nombre</a>
+                            <span class="text-muted">· @v.ItemClinico.Nombre</span>
+                        </span>
+                        <span class="vv-vencida">Vencida el @v.ProximaDosis?.ToString("dd/MM/yyyy")</span>
+                    </li>
+                }
+            </ul>
+            @if (ViewBag.TotalVencidas > vencidas.Count)
+            {
+                <p class="small text-muted mt-2 mb-0">Se muestran las @vencidas.Count más antiguas de @ViewBag.TotalVencidas.</p>
+            }
+        }
+        else
+        {
+            <p class="vv-vacio mb-0">Todas las vacunas están al día.</p>
+        }
+    </section>
+}
 
 @if (rol == "Administrador")
 {
