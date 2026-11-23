@@ -62,7 +62,7 @@ body {
 
 /* El logo original tiene fondo claro: se muestra sobre una tarjeta blanca para que se vea en la barra oscura. */
 .vv-logo {
-  height: 3rem;
+  height: 3.25rem;
   width: auto;
   padding: 0.25rem 0.6rem;
   background-color: #ffffff;
