@@ -4,7 +4,10 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Mascotas</h2>
+    <div>
+        <h2 class="mb-0">Mascotas</h2>
+        <p class="vv-eyebrow mb-0">@Model.Count @(Model.Count == 1 ? "paciente" : "pacientes")@(string.IsNullOrWhiteSpace(ViewBag.Buscar as string) ? "" : " encontrados")</p>
+    </div>
     <a class="btn btn-primary" asp-action="Create">Nueva mascota</a>
 </div>
 
@@ -22,11 +25,11 @@
     <button type="submit" class="btn btn-outline-primary">Buscar</button>
 </form>
 
-<table class="table table-striped align-middle">
+<div class="table-responsive">
+<table class="table table-striped align-middle mb-0">
     <thead>
         <tr>
-            <th>Foto</th>
-            <th>Nombre</th>
+            <th>Paciente</th>
             <th>Especie / raza</th>
             <th>Dueño</th>
             <th class="text-end">Acciones</th>
@@ -37,12 +40,21 @@
         {
             <tr>
                 <td>
-                    @if (m.Foto is not null)
-                    {
-                        <img src="@Url.Action("Foto", new { id = m.Id })" alt="Foto" width="48" height="48" class="rounded-circle" style="object-fit:cover" />
-                    }
+                    <div class="d-flex align-items-center gap-3">
+                        @if (m.Foto is not null)
+                        {
+                            <img src="@Url.Action("Foto", new { id = m.Id })" alt="" class="vv-avatar" />
+                        }
+                        else
+                        {
+                            <span class="vv-avatar" aria-hidden="true">@m.Especie.Nombre[..1]</span>
+                        }
+                        <div>
+                            <a class="fw-semibold" asp-controller="Expediente" asp-action="Index" asp-route-id="@m.Id">@m.Nombre</a>
+                            <div class="small text-muted">@string.Join(" · ", new[] { m.Sexo, m.Edad }.Where(s => s is not null))</div>
+                        </div>
+                    </div>
                 </td>
-                <td>@m.Nombre</td>
                 <td>@m.Especie.Nombre @(m.Raza is null ? "" : $"/ {m.Raza.Nombre}")</td>
                 <td>@m.Dueno.Nombre @m.Dueno.Apellidos <span class="text-muted small">(@m.Dueno.Cedula)</span></td>
                 <td class="text-end">
@@ -54,7 +66,8 @@
         }
         @if (!Model.Any())
         {
-            <tr><td colspan="5" class="text-muted">No hay mascotas registradas.</td></tr>
+            <tr><td colspan="4" class="vv-vacio">@(string.IsNullOrWhiteSpace(ViewBag.Buscar as string) ? "Todavía no hay pacientes. Registre la primera mascota con el botón Nueva mascota." : "Ninguna mascota coincide con la búsqueda.")</td></tr>
         }
     </tbody>
 </table>
+</div>

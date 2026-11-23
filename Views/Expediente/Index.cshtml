@@ -8,28 +8,49 @@
     var examenes = (List<ExamenArchivo>)ViewBag.Examenes;
     // La última atención se calcula desde el historial (no es una columna).
     var ultimaAtencion = Model.Notas.Any() ? Model.Notas.Max(n => n.FechaRegistro) : (DateTime?)null;
+    // Solo la aplicación más reciente de cada vacuna puede estar vencida (una nueva dosis la renueva).
+    var vencidasSet = Model.AplicacionesVacuna
+        .GroupBy(a => a.ItemClinicoId)
+        .Select(g => g.MaxBy(a => a.FechaAplicacion)!)
+        .Where(a => a.ProximaDosis < hoy)
+        .ToHashSet();
+    var vencidas = vencidasSet.Count;
+    var vigentes = Model.Tratamientos.Count(t => !t.Suspendido);
 }
 
-<div class="d-flex align-items-center gap-3 mb-3">
+<p class="vv-eyebrow"><a asp-controller="Mascotas" asp-action="Index">Mascotas</a> / Expediente</p>
+
+<section class="vv-card vv-ficha">
     @if (Model.Foto is not null)
     {
-        <img src="@Url.Action("Foto", "Mascotas", new { id = Model.Id })" alt="Foto de @Model.Nombre" width="96" height="96" class="rounded-circle" style="object-fit:cover" />
+        <img src="@Url.Action("Foto", "Mascotas", new { id = Model.Id })" alt="Foto de @Model.Nombre" class="vv-avatar vv-avatar-lg" />
+    }
+    else
+    {
+        <span class="vv-avatar vv-avatar-lg" aria-hidden="true">@Model.Especie.Nombre[..1]</span>
     }
     <div class="flex-grow-1">
-        <h2 class="mb-1">@Model.Nombre</h2>
-        <div class="text-muted">
-            @string.Join(" · ", new[]
+        <h1>@Model.Nombre</h1>
+        <dl class="vv-datos">
+            <div><dt>Especie</dt><dd>@Model.Especie.Nombre@(Model.Raza is null ? "" : $" / {Model.Raza.Nombre}")</dd></div>
+            <div><dt>Sexo</dt><dd>@(Model.Sexo ?? "Sin especificar")</dd></div>
+            <div><dt>Edad</dt><dd title="@Model.FechaNacimiento?.ToString("dd/MM/yyyy")">@(Model.Edad ?? "Sin registrar")</dd></div>
+            <div><dt>Dueño</dt><dd>@Model.Dueno.Nombre @Model.Dueno.Apellidos <span class="small text-muted">(@Model.Dueno.Cedula)</span></dd></div>
+            <div><dt>Última atención</dt><dd>@(ultimaAtencion?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Sin registros")</dd></div>
+        </dl>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            @if (vencidas > 0)
             {
-                Model.Especie.Nombre + (Model.Raza is null ? "" : $" / {Model.Raza.Nombre}"),
-                Model.Sexo,
-                Model.FechaNacimiento is null ? null : $"Nació el {Model.FechaNacimiento:dd/MM/yyyy}"
-            }.Where(s => !string.IsNullOrEmpty(s)))
+                <span class="vv-pill vv-pill-outline-accent">@vencidas @(vencidas == 1 ? "vacuna vencida" : "vacunas vencidas")</span>
+            }
+            @if (vigentes > 0)
+            {
+                <span class="vv-pill vv-pill-outline">@vigentes @(vigentes == 1 ? "tratamiento vigente" : "tratamientos vigentes")</span>
+            }
         </div>
-        <div>Dueño: @Model.Dueno.Nombre @Model.Dueno.Apellidos (@Model.Dueno.Cedula) · @Model.Dueno.Email</div>
-        <div class="small">Última atención: @(ultimaAtencion?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "sin registros")</div>
     </div>
-    <a class="btn btn-outline-secondary" asp-controller="Mascotas" asp-action="Edit" asp-route-id="@Model.Id">Editar datos</a>
-</div>
+    <a class="btn btn-outline-secondary align-self-start" asp-controller="Mascotas" asp-action="Edit" asp-route-id="@Model.Id">Editar datos</a>
+</section>
 
 @if (TempData["Exito"] is string exito)
 {
@@ -44,193 +65,218 @@
     <div class="alert alert-info">Solo un veterinario puede registrar información en el expediente.</div>
 }
 
-<h4 class="mt-4">Vacunas</h4>
-<table class="table table-sm align-middle">
-    <thead>
-        <tr><th>Vacuna</th><th>Aplicada</th><th>Próxima dosis</th><th>Veterinario</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var a in Model.AplicacionesVacuna.OrderByDescending(a => a.FechaAplicacion))
-        {
-            <tr>
-                <td>@a.ItemClinico.Nombre</td>
-                <td>@a.FechaAplicacion.ToString("dd/MM/yyyy")</td>
-                <td>
-                    @a.ProximaDosis?.ToString("dd/MM/yyyy")
-                    @if (a.ProximaDosis < hoy)
+<section class="vv-card vv-seccion">
+    <h2>Vacunas <span class="vv-cuenta">@Model.AplicacionesVacuna.Count</span></h2>
+    @if (Model.AplicacionesVacuna.Any())
+    {
+        <div class="table-responsive border-0 shadow-none">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr><th>Vacuna</th><th>Aplicada</th><th>Próxima dosis</th><th>Veterinario</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.AplicacionesVacuna.OrderByDescending(a => a.FechaAplicacion))
                     {
-                        <span class="badge bg-danger">Vencida</span>
+                        <tr>
+                            <td>@a.ItemClinico.Nombre</td>
+                            <td>@a.FechaAplicacion.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @(a.ProximaDosis?.ToString("dd/MM/yyyy") ?? "—")
+                                @if (vencidasSet.Contains(a))
+                                {
+                                    <span class="vv-vencida">Vencida</span>
+                                }
+                            </td>
+                            <td>@a.Veterinario.Usuario.Nombre @a.Veterinario.Usuario.Apellidos</td>
+                        </tr>
                     }
-                </td>
-                <td>@a.Veterinario.Usuario.Nombre @a.Veterinario.Usuario.Apellidos</td>
-            </tr>
-        }
-        @if (!Model.AplicacionesVacuna.Any())
-        {
-            <tr><td colspan="4" class="text-muted">Sin vacunas registradas.</td></tr>
-        }
-    </tbody>
-</table>
-@if (puedeRegistrar)
-{
-    <form asp-action="AplicarVacuna" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end mb-4">
-        <div class="col-md-4">
-            <label class="form-label" for="vacuna">Vacuna</label>
-            <select id="vacuna" name="itemClinicoId" class="form-select" required
-                    asp-items="@(new SelectList(vacunas, "Id", "Nombre"))">
-                <option value="">Seleccione</option>
-            </select>
+                </tbody>
+            </table>
         </div>
-        <div class="col-md-3">
-            <label class="form-label" for="fechaAplicacion">Fecha de aplicación</label>
-            <input id="fechaAplicacion" name="fechaAplicacion" type="date" class="form-control" required value="@hoy.ToString("yyyy-MM-dd")" max="@hoy.ToString("yyyy-MM-dd")" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label" for="proximaDosis">Próxima dosis (opcional)</label>
-            <input id="proximaDosis" name="proximaDosis" type="date" class="form-control" />
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Registrar</button>
-        </div>
-    </form>
-}
+    }
+    else
+    {
+        <p class="vv-vacio mb-0">Sin vacunas registradas.</p>
+    }
+    @if (puedeRegistrar)
+    {
+        <form asp-action="AplicarVacuna" asp-route-id="@Model.Id" method="post" class="vv-registrar row g-2 align-items-end mx-0">
+            <div class="col-md-4">
+                <label class="form-label" for="vacuna">Vacuna</label>
+                <select id="vacuna" name="itemClinicoId" class="form-select" required
+                        asp-items="@(new SelectList(vacunas, "Id", "Nombre"))">
+                    <option value="">Seleccione</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="fechaAplicacion">Fecha de aplicación</label>
+                <input id="fechaAplicacion" name="fechaAplicacion" type="date" class="form-control" required value="@hoy.ToString("yyyy-MM-dd")" max="@hoy.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="proximaDosis">Próxima dosis (opcional)</label>
+                <input id="proximaDosis" name="proximaDosis" type="date" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Registrar</button>
+            </div>
+        </form>
+    }
+</section>
 
-<h4 class="mt-4">Medicamentos y tratamientos</h4>
-<table class="table table-sm align-middle">
-    <thead>
-        <tr><th>Ítem</th><th>Inicio</th><th>Indicaciones</th><th>Asignado por</th><th>Estado</th><th></th></tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model.Tratamientos.OrderBy(t => t.Suspendido).ThenByDescending(t => t.FechaInicio))
-        {
-            <tr class="@(t.Suspendido ? "text-muted" : "")">
-                <td>@t.ItemClinico.Nombre <span class="small text-muted">(@t.ItemClinico.Tipo)</span></td>
-                <td>@t.FechaInicio.ToString("dd/MM/yyyy")</td>
-                <td>@t.Indicaciones</td>
-                <td>@t.Veterinario.Usuario.Nombre @t.Veterinario.Usuario.Apellidos</td>
-                <td>
-                    @if (t.Suspendido)
+<section class="vv-card vv-seccion">
+    <h2>Medicamentos y tratamientos <span class="vv-cuenta">@Model.Tratamientos.Count</span></h2>
+    @if (Model.Tratamientos.Any())
+    {
+        <div class="table-responsive border-0 shadow-none">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr><th>Ítem</th><th>Inicio</th><th>Indicaciones</th><th>Asignado por</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Tratamientos.OrderBy(t => t.Suspendido).ThenByDescending(t => t.FechaInicio))
                     {
-                        <span class="badge bg-secondary">Suspendido</span>
-                        <div class="small">@t.FechaSuspension?.ToString("dd/MM/yyyy") por @t.VeterinarioSuspension?.Usuario.Nombre @t.VeterinarioSuspension?.Usuario.Apellidos</div>
+                        <tr class="@(t.Suspendido ? "text-muted" : "")">
+                            <td>@t.ItemClinico.Nombre <span class="small text-muted">(@t.ItemClinico.Tipo)</span></td>
+                            <td>@t.FechaInicio.ToString("dd/MM/yyyy")</td>
+                            <td>@t.Indicaciones</td>
+                            <td>@t.Veterinario.Usuario.Nombre @t.Veterinario.Usuario.Apellidos</td>
+                            <td>
+                                @if (t.Suspendido)
+                                {
+                                    <span class="badge bg-secondary">Suspendido</span>
+                                    <div class="small">@t.FechaSuspension?.ToString("dd/MM/yyyy") por @t.VeterinarioSuspension?.Usuario.Nombre @t.VeterinarioSuspension?.Usuario.Apellidos</div>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Vigente</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (puedeRegistrar && !t.Suspendido)
+                                {
+                                    <form asp-action="SuspenderTratamiento" asp-route-asignacionId="@t.Id" method="post"
+                                          onsubmit="return confirm('¿Suspender este tratamiento?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Suspender</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
                     }
-                    else
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="vv-vacio mb-0">Sin tratamientos asignados.</p>
+    }
+    @if (puedeRegistrar)
+    {
+        <form asp-action="AsignarTratamiento" asp-route-id="@Model.Id" method="post" class="vv-registrar row g-2 align-items-end mx-0">
+            <div class="col-md-3">
+                <label class="form-label" for="tratamiento">Medicamento o tratamiento</label>
+                <select id="tratamiento" name="itemClinicoId" class="form-select" required
+                        asp-items="@(new SelectList(tratamientos, "Id", "Nombre"))">
+                    <option value="">Seleccione</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="fechaInicio">Inicio</label>
+                <input id="fechaInicio" name="fechaInicio" type="date" class="form-control" required value="@hoy.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" for="indicaciones">Indicaciones</label>
+                <input id="indicaciones" name="indicaciones" class="form-control" maxlength="500" placeholder="Dosis, frecuencia, duración..." />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Asignar</button>
+            </div>
+        </form>
+    }
+</section>
+
+<section class="vv-card vv-seccion">
+    <h2>Exámenes <span class="vv-cuenta">@examenes.Count</span></h2>
+    @if (examenes.Any())
+    {
+        <div class="table-responsive border-0 shadow-none">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr><th>Descripción</th><th>Archivo</th><th>Fecha</th><th>Subido por</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in examenes)
                     {
-                        <span class="badge bg-success">Vigente</span>
+                        <tr>
+                            <td>@e.Descripcion</td>
+                            <td><a asp-action="Examen" asp-route-examenId="@e.Id" target="_blank">@e.NombreArchivo</a></td>
+                            <td>@e.FechaSubida.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@e.Veterinario.Usuario.Nombre @e.Veterinario.Usuario.Apellidos</td>
+                        </tr>
                     }
-                </td>
-                <td class="text-end">
-                    @if (puedeRegistrar && !t.Suspendido)
-                    {
-                        <form asp-action="SuspenderTratamiento" asp-route-asignacionId="@t.Id" method="post"
-                              onsubmit="return confirm('¿Suspender este tratamiento?');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Suspender</button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-        @if (!Model.Tratamientos.Any())
-        {
-            <tr><td colspan="6" class="text-muted">Sin tratamientos asignados.</td></tr>
-        }
-    </tbody>
-</table>
-@if (puedeRegistrar)
-{
-    <form asp-action="AsignarTratamiento" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-end mb-4">
-        <div class="col-md-3">
-            <label class="form-label" for="tratamiento">Medicamento o tratamiento</label>
-            <select id="tratamiento" name="itemClinicoId" class="form-select" required
-                    asp-items="@(new SelectList(tratamientos, "Id", "Nombre"))">
-                <option value="">Seleccione</option>
-            </select>
+                </tbody>
+            </table>
         </div>
-        <div class="col-md-2">
-            <label class="form-label" for="fechaInicio">Inicio</label>
-            <input id="fechaInicio" name="fechaInicio" type="date" class="form-control" required value="@hoy.ToString("yyyy-MM-dd")" />
-        </div>
-        <div class="col-md-5">
-            <label class="form-label" for="indicaciones">Indicaciones</label>
-            <input id="indicaciones" name="indicaciones" class="form-control" maxlength="500" placeholder="Dosis, frecuencia, duración..." />
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Asignar</button>
-        </div>
-    </form>
-}
+    }
+    else
+    {
+        <p class="vv-vacio mb-0">Sin exámenes.</p>
+    }
+    @if (puedeRegistrar)
+    {
+        <form asp-action="SubirExamen" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="vv-registrar row g-2 align-items-end mx-0">
+            <div class="col-md-5">
+                <label class="form-label" for="descripcion">Descripción</label>
+                <input id="descripcion" name="descripcion" class="form-control" required maxlength="300" placeholder="Ej.: Hemograma completo" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" for="archivo">Archivo (PDF, JPG o PNG, máx. 5 MB)</label>
+                <input id="archivo" name="archivo" type="file" class="form-control" required accept="application/pdf,image/jpeg,image/png" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Subir</button>
+            </div>
+        </form>
+    }
+</section>
 
-<h4 class="mt-4">Exámenes</h4>
-<table class="table table-sm align-middle">
-    <thead>
-        <tr><th>Descripción</th><th>Archivo</th><th>Fecha</th><th>Subido por</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var e in examenes)
-        {
-            <tr>
-                <td>@e.Descripcion</td>
-                <td><a asp-action="Examen" asp-route-examenId="@e.Id" target="_blank">@e.NombreArchivo</a></td>
-                <td>@e.FechaSubida.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
-                <td>@e.Veterinario.Usuario.Nombre @e.Veterinario.Usuario.Apellidos</td>
-            </tr>
-        }
-        @if (!examenes.Any())
-        {
-            <tr><td colspan="4" class="text-muted">Sin exámenes.</td></tr>
-        }
-    </tbody>
-</table>
-@if (puedeRegistrar)
-{
-    <form asp-action="SubirExamen" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" class="row g-2 align-items-end mb-4">
-        <div class="col-md-5">
-            <label class="form-label" for="descripcion">Descripción</label>
-            <input id="descripcion" name="descripcion" class="form-control" required maxlength="300" placeholder="Ej.: Hemograma completo" />
-        </div>
-        <div class="col-md-5">
-            <label class="form-label" for="archivo">Archivo (PDF, JPG o PNG, máx. 5 MB)</label>
-            <input id="archivo" name="archivo" type="file" class="form-control" required accept="application/pdf,image/jpeg,image/png" />
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Subir</button>
-        </div>
-    </form>
-}
-
-<h4 class="mt-4">Historial clínico</h4>
-<p class="text-muted small">Las notas son permanentes: no se pueden editar ni eliminar.</p>
-@if (puedeRegistrar)
-{
-    <form asp-action="AgregarNota" asp-route-id="@Model.Id" method="post" class="mb-4" id="formNota">
-        <div class="btn-group btn-group-sm mb-1" role="toolbar" aria-label="Formato">
-            <button type="button" class="btn btn-outline-secondary" data-cmd="bold" title="Negrita"><b>N</b></button>
-            <button type="button" class="btn btn-outline-secondary" data-cmd="italic" title="Cursiva"><i>K</i></button>
-            <button type="button" class="btn btn-outline-secondary" data-cmd="underline" title="Subrayado"><u>S</u></button>
-            <button type="button" class="btn btn-outline-secondary" data-cmd="insertUnorderedList" title="Lista">• Lista</button>
-            <button type="button" class="btn btn-outline-secondary" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>
-        </div>
-        <div id="editorNota" class="form-control" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Nueva nota" style="min-height:120px"></div>
-        <input type="hidden" name="contenido" id="contenidoNota" />
-        <button type="submit" class="btn btn-primary mt-2">Agregar nota</button>
-    </form>
-}
-@foreach (var n in Model.Notas.OrderByDescending(n => n.FechaRegistro))
-{
-    <div class="card mb-2">
-        <div class="card-header small">
-            @n.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @n.Veterinario.Usuario.Nombre @n.Veterinario.Usuario.Apellidos
-        </div>
-        @* El contenido se sanitizó al guardarse. *@
-        <div class="card-body">@Html.Raw(n.Contenido)</div>
-    </div>
-}
-@if (!Model.Notas.Any())
-{
-    <p class="text-muted">Sin notas en el historial.</p>
-}
-
-<a asp-controller="Mascotas" asp-action="Index">Volver a mascotas</a>
+<section class="vv-card vv-seccion">
+    <h2>Historial clínico <span class="vv-cuenta">@Model.Notas.Count</span></h2>
+    <p class="text-muted small mb-0">Las notas son permanentes: no se pueden editar ni eliminar.</p>
+    @if (puedeRegistrar)
+    {
+        <form asp-action="AgregarNota" asp-route-id="@Model.Id" method="post" class="vv-registrar" id="formNota">
+            <div class="btn-group btn-group-sm mb-2" role="toolbar" aria-label="Formato">
+                <button type="button" class="btn btn-outline-secondary bg-white" data-cmd="bold" title="Negrita"><b>N</b></button>
+                <button type="button" class="btn btn-outline-secondary bg-white" data-cmd="italic" title="Cursiva"><i>K</i></button>
+                <button type="button" class="btn btn-outline-secondary bg-white" data-cmd="underline" title="Subrayado"><u>S</u></button>
+                <button type="button" class="btn btn-outline-secondary bg-white" data-cmd="insertUnorderedList" title="Lista">• Lista</button>
+                <button type="button" class="btn btn-outline-secondary bg-white" data-cmd="insertOrderedList" title="Lista numerada">1. Lista</button>
+            </div>
+            <div id="editorNota" class="form-control" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Nueva nota" style="min-height:120px"></div>
+            <input type="hidden" name="contenido" id="contenidoNota" />
+            <button type="submit" class="btn btn-primary mt-2">Agregar nota</button>
+        </form>
+    }
+    @if (Model.Notas.Any())
+    {
+        <ol class="vv-timeline">
+            @foreach (var n in Model.Notas.OrderByDescending(n => n.FechaRegistro))
+            {
+                <li>
+                    <time datetime="@n.FechaRegistro.ToString("o")">@n.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time>
+                    <span class="small text-muted">· @n.Veterinario.Usuario.Nombre @n.Veterinario.Usuario.Apellidos</span>
+                    @* El contenido se sanitizó al guardarse. *@
+                    <div class="vv-nota">@Html.Raw(n.Contenido)</div>
+                </li>
+            }
+        </ol>
+    }
+    else
+    {
+        <p class="vv-vacio mb-0">Sin notas en el historial.</p>
+    }
+</section>
 
 @section Scripts {
     <script>

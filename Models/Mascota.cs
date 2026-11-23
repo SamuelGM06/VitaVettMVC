@@ -24,6 +24,27 @@ public class Mascota
     [MaxLength(10)]
     public string? Sexo { get; set; }
 
+    /// <summary>Edad legible calculada (no se guarda en la BD).</summary>
+    public string? Edad
+    {
+        get
+        {
+            if (FechaNacimiento is not { } nacimiento)
+            {
+                return null;
+            }
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+            var meses = (hoy.Year - nacimiento.Year) * 12 + hoy.Month - nacimiento.Month - (hoy.Day < nacimiento.Day ? 1 : 0);
+            return meses switch
+            {
+                < 1 => "Menos de 1 mes",
+                < 12 => meses == 1 ? "1 mes" : $"{meses} meses",
+                _ => meses / 12 == 1 ? "1 año" : $"{meses / 12} años"
+            };
+        }
+    }
+
     public byte[]? Foto { get; set; }
 
     [MaxLength(100)]
